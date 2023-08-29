@@ -7,6 +7,8 @@ use WendellAdriel\Lift\Tests\Datasets\BookCase;
 use WendellAdriel\Lift\Tests\Datasets\Computer;
 use WendellAdriel\Lift\Tests\Datasets\Country;
 use WendellAdriel\Lift\Tests\Datasets\Image;
+use WendellAdriel\Lift\Tests\Datasets\Library;
+use WendellAdriel\Lift\Tests\Datasets\LibraryBook;
 use WendellAdriel\Lift\Tests\Datasets\Manufacturer;
 use WendellAdriel\Lift\Tests\Datasets\Phone;
 use WendellAdriel\Lift\Tests\Datasets\Post;
@@ -15,6 +17,7 @@ use WendellAdriel\Lift\Tests\Datasets\Role;
 use WendellAdriel\Lift\Tests\Datasets\Seller;
 use WendellAdriel\Lift\Tests\Datasets\Tag;
 use WendellAdriel\Lift\Tests\Datasets\User;
+use WendellAdriel\Lift\Tests\Datasets\WorkBook;
 
 it('loads BelongsTo relation', function () {
     $user = User::create([
@@ -30,6 +33,7 @@ it('loads BelongsTo relation', function () {
 
     $post->user()->associate($user);
     $post->save();
+
     expect($post->user->id)->toBe($user->id)
         ->and($post->user_id)->toBe($user->id);
 
@@ -294,4 +298,24 @@ it('loads a relation with arguments', function () {
 
     $price = Price::query()->find($price->id);
     expect($price->book->id)->toBe($price->id);
+});
+
+it('will not add unnecessary keys', function () {
+    User::create([
+        'name' => fake()->name,
+        'email' => fake()->unique()->safeEmail,
+        'password' => 's3Cr3T@!!!',
+    ])->workBooks()->create([
+        'name' => fake()->name,
+    ]);
+
+    Library::create()->libraryBooks()->create([
+        'name' => fake()->name,
+    ]);
+
+    $workBook = WorkBook::query()->first();
+    $libraryBook = LibraryBook::query()->first();
+
+    expect($workBook->save())->toBeTrue()
+        ->and($libraryBook->save())->toBeTrue();
 });
